@@ -52,7 +52,7 @@ function App() {
 
   const fetchPosts = async () => {
     try {
-      const res = await fetch((import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001') + '/api/posts');
+      const res = await fetch((import.meta.env.VITE_API_BASE_URL || '') + '/api/posts');
       const json = await res.json();
       setData({
         all: json.all || [],
@@ -68,7 +68,7 @@ function App() {
 
   const fetchSettings = async () => {
     try {
-      const res = await fetch((import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001') + '/api/settings');
+      const res = await fetch((import.meta.env.VITE_API_BASE_URL || '') + '/api/settings');
       const json = await res.json();
       setSettingsData(json);
     } catch (err) {
@@ -86,7 +86,7 @@ function App() {
   const handleGeneratePitch = async (postId: string) => {
     setGeneratingFor(postId);
     try {
-      const res = await fetch('http://localhost:3001/api/generate-pitch', {
+      const res = await fetch((import.meta.env.VITE_API_BASE_URL || '') + '/api/generate-pitch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ postId })
@@ -109,7 +109,7 @@ function App() {
     if (!settingsData) return;
     setSavingSettings(true);
     try {
-      const res = await fetch('http://localhost:3001/api/settings', {
+      const res = await fetch((import.meta.env.VITE_API_BASE_URL || '') + '/api/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settingsData)
