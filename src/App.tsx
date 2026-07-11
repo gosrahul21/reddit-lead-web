@@ -68,7 +68,7 @@ function App() {
 
   const fetchSettings = async () => {
     try {
-      const res = await fetch('http://localhost:3001/api/settings');
+      const res = await fetch((import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001') + '/api/settings');
       const json = await res.json();
       setSettingsData(json);
     } catch (err) {
