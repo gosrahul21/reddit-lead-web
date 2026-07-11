@@ -52,7 +52,7 @@ function App() {
 
   const fetchPosts = async () => {
     try {
-      const res = await fetch('http://localhost:3001/api/posts');
+      const res = await fetch((import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001') + '/api/posts');
       const json = await res.json();
       setData({
         all: json.all || [],
