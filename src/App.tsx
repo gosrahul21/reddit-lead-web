@@ -386,21 +386,41 @@ function App() {
                   {post.selftext}
                 </div>
 
-                {activeTab === 'matched' && post.pitch && (
+                {activeTab === 'matched' && (post.pitch || post.replyMessage) && (
                   <div className="mt-2 flex flex-col gap-3">
-                    <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
-                      <h4 className="text-blue-400 text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1"><Sparkles className="w-3 h-3"/> Suggested DM Pitch</h4>
-                      <p 
-                        className="text-sm text-blue-100 whitespace-pre-wrap cursor-pointer hover:text-white transition-colors"
-                        onClick={() => {
-                          navigator.clipboard.writeText(post.pitch!);
-                          window.open(post.author_fullname?`https://www.reddit.com/chat/user/${post.author_fullname}`: `https://www.reddit.com/user/${post.author}`, '_blank');
-                        }}
-                        title="Click to copy pitch"
-                      >
-                        {post.pitch}
-                      </p>
-                    </div>
+
+                    {post.replyMessage && (
+                      <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
+                        <h4 className="text-green-400 text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1"><Sparkles className="w-3 h-3"/> Suggested Reply</h4>
+                        <p 
+                          className="text-sm text-green-100 whitespace-pre-wrap cursor-pointer hover:text-white transition-colors"
+                          onClick={() => {
+                            navigator.clipboard.writeText(post.replyMessage!);
+                            window.open(`https://www.reddit.com${post.permalink}`, '_blank');
+                          }}
+                          title="Click to copy reply"
+                        >
+                          {post.replyMessage}
+                        </p>
+                      </div>
+                    )}                   
+
+                    {post.pitch && (
+                      <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
+                        <h4 className="text-blue-400 text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1"><Sparkles className="w-3 h-3"/> Suggested DM Pitch</h4>
+                        <p 
+                          className="text-sm text-blue-100 whitespace-pre-wrap cursor-pointer hover:text-white transition-colors"
+                          onClick={() => {
+                            navigator.clipboard.writeText(post.pitch!);
+                            window.open(post.author_fullname?`https://www.reddit.com/chat/user/${post.author_fullname}`: `https://www.reddit.com/user/${post.author}`, '_blank');
+                          }}
+                          title="Click to copy pitch"
+                        >
+                          {post.pitch}
+                        </p>
+                      </div>
+                    )}
+
                     <div className="flex justify-end mt-2">
                       {/* <button 
                         className="btn-primary flex items-center gap-2 bg-green-600 hover:bg-green-500 shadow-green-500/20"
