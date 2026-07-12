@@ -6,11 +6,13 @@ interface Post {
   title: string;
   subreddit: string;
   author: string;
+  author_fullname: string;
   permalink: string;
   selftext: string;
   created_utc: number;
   savedAt: string;
   pitch?: string;
+  replyMessage?: string;
 }
 
 interface PostsData {
@@ -392,7 +394,7 @@ function App() {
                         className="text-sm text-blue-100 whitespace-pre-wrap cursor-pointer hover:text-white transition-colors"
                         onClick={() => {
                           navigator.clipboard.writeText(post.pitch!);
-                          window.open(`https://www.reddit.com/user/${post.author}`, '_blank');
+                          window.open(post.author_fullname?`https://www.reddit.com/chat/user/${post.author_fullname}`: `https://www.reddit.com/user/${post.author}`, '_blank');
                         }}
                         title="Click to copy pitch"
                       >
