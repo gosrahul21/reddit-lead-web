@@ -60,3 +60,7 @@
 ::-webkit-scrollbar-thumb:hover {
   background-color: #475569;
 }
+
+button {
+  cursor: pointer;
+}
