@@ -16,10 +16,15 @@ interface Post {
   };
 }
 
+interface PaginatedPosts {
+  data: Post[];
+  total: number;
+}
+
 interface PostsData {
-  all: Post[];
-  matched: Post[];
-  rejected: Post[];
+  all: PaginatedPosts;
+  matched: PaginatedPosts;
+  rejected: PaginatedPosts;
 }
 
 interface SettingsData {
@@ -43,21 +48,27 @@ const formatHour = (hour: number) => {
 };
 
 function App() {
-  const [data, setData] = useState<PostsData>({ all: [], matched: [], rejected: [] });
+  const [data, setData] = useState<PostsData>({
+    all: { data: [], total: 0 },
+    matched: { data: [], total: 0 },
+    rejected: { data: [], total: 0 }
+  });
+  const [page, setPage] = useState(1);
+  const limit = 20;
   const [settingsData, setSettingsData] = useState<SettingsData | null>(null);
   const [activeTab, setActiveTab] = useState<'matched' | 'rejected' | 'all' | 'settings'>('matched');
   const [loading, setLoading] = useState(true);
   const [savingSettings, setSavingSettings] = useState(false);
   const [generatingFor, setGeneratingFor] = useState<string | null>(null);
 
-  const fetchPosts = async () => {
+  const fetchPosts = async (currentPage: number = page) => {
     try {
-      const res = await fetch((import.meta.env.VITE_API_BASE_URL || '') + '/api/posts');
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/posts?page=${currentPage}&limit=${limit}`);
       const json = await res.json();
       setData({
-        all: json.all || [],
-        matched: json.matched || [],
-        rejected: json.rejected || []
+        all: json.all || { data: [], total: 0 },
+        matched: json.matched || { data: [], total: 0 },
+        rejected: json.rejected || { data: [], total: 0 }
       });
     } catch (err) {
       console.error('Failed to fetch posts', err);
@@ -77,11 +88,11 @@ function App() {
   };
 
   useEffect(() => {
-    fetchPosts();
+    fetchPosts(page);
     fetchSettings();
-    const interval = setInterval(fetchPosts, 30000); // Poll every 30s
+    const interval = setInterval(() => fetchPosts(page), 30000); // Poll every 30s
     return () => clearInterval(interval);
-  }, []);
+  }, [page]);
 
   const handleGeneratePitch = async (postId: string) => {
     setGeneratingFor(postId);
@@ -127,7 +138,15 @@ function App() {
   };
 
   const getActiveData = () => {
-    return data[activeTab as keyof PostsData] || [];
+    if (activeTab === 'settings') return [];
+    const tabData = data[activeTab as keyof PostsData] as PaginatedPosts;
+    return tabData?.data || [];
+  };
+
+  const getActiveTotal = () => {
+    if (activeTab === 'settings') return 0;
+    const tabData = data[activeTab as keyof PostsData] as PaginatedPosts;
+    return tabData?.total || 0;
   };
 
   return (
@@ -144,11 +163,11 @@ function App() {
         
         <div className="flex gap-4">
           <div className="glass-panel px-6 py-4 flex flex-col items-center">
-            <span className="text-3xl font-bold text-green-400">{data.matched.length}</span>
+            <span className="text-3xl font-bold text-green-400">{data.matched.total}</span>
             <span className="text-xs text-text-muted uppercase tracking-wider font-semibold mt-1">Matched</span>
           </div>
           <div className="glass-panel px-6 py-4 flex flex-col items-center">
-            <span className="text-3xl font-bold text-red-400">{data.rejected.length}</span>
+            <span className="text-3xl font-bold text-red-400">{data.rejected.total}</span>
             <span className="text-xs text-text-muted uppercase tracking-wider font-semibold mt-1">Rejected</span>
           </div>
         </div>
@@ -157,21 +176,21 @@ function App() {
       {/* Navigation */}
       <nav className="flex gap-4 border-b border-slate-700/50 pb-px overflow-x-auto">
         <button 
-          onClick={() => setActiveTab('matched')}
+          onClick={() => { setActiveTab('matched'); setPage(1); }}
           className={`px-6 py-3 font-medium transition-all relative whitespace-nowrap ${activeTab === 'matched' ? 'text-blue-400' : 'text-text-muted hover:text-slate-300'}`}
         >
           <span className="flex items-center gap-2"><CheckCircle className="w-4 h-4"/> Matched Leads</span>
           {activeTab === 'matched' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]" />}
         </button>
         <button 
-          onClick={() => setActiveTab('rejected')}
+          onClick={() => { setActiveTab('rejected'); setPage(1); }}
           className={`px-6 py-3 font-medium transition-all relative whitespace-nowrap ${activeTab === 'rejected' ? 'text-red-400' : 'text-text-muted hover:text-slate-300'}`}
         >
           <span className="flex items-center gap-2"><XCircle className="w-4 h-4"/> Rejected</span>
           {activeTab === 'rejected' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" />}
         </button>
         <button 
-          onClick={() => setActiveTab('all')}
+          onClick={() => { setActiveTab('all'); setPage(1); }}
           className={`px-6 py-3 font-medium transition-all relative whitespace-nowrap ${activeTab === 'all' ? 'text-slate-200' : 'text-text-muted hover:text-slate-300'}`}
         >
           <span className="flex items-center gap-2"><Search className="w-4 h-4"/> All Posts</span>
@@ -433,6 +452,29 @@ function App() {
                 )}
               </div>
             ))}
+          </div>
+        )}
+        
+        {/* Pagination Controls */}
+        {activeTab !== 'settings' && getActiveTotal() > 0 && (
+          <div className="flex justify-between items-center bg-slate-900/50 p-4 rounded-lg border border-slate-800">
+            <button 
+              className="btn-primary bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={page === 1}
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+            >
+              Previous
+            </button>
+            <span className="text-sm text-slate-300 font-medium">
+              Page {page} of {Math.ceil(getActiveTotal() / limit)}
+            </span>
+            <button 
+              className="btn-primary bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={page >= Math.ceil(getActiveTotal() / limit)}
+              onClick={() => setPage(p => p + 1)}
+            >
+              Next
+            </button>
           </div>
         )}
       </main>
